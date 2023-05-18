@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer } from "react";
 import Table from "../components/Table";
 import { useSelector } from "react-redux";
+import { publicRequest } from "../requestMethods";
 const Clients = () => {
   const { currentUser } = useSelector((state) => state.user);
   const clientData = [
@@ -8,12 +9,56 @@ const Clients = () => {
     { name: "Jane", age: 30, service_Start: "2020-01-01" },
   ];
   const [clients, setClients] = useState(clientData);
+  const heads = ["Name", "Email", "Phone", "Service Type"];
+  const initialState = {
+    name: "",
+    email: "",
+    phone: "",
+    serviceType: "",
+    address: "",
+  };
+
+  function reducer(state, action) {
+    switch (action.type) {
+      case "CHANGE":
+        return {
+          ...state,
+          [action.field]: action.value,
+        };
+      case "RESET":
+        return initialState;
+      default:
+        throw new Error();
+    }
+  }
+  const [formState, dispatch] = useReducer(reducer, initialState);
+  const handleChange = (e) => {
+    dispatch({
+      type: "CHANGE",
+      field: e.target.name,
+      value: e.target.value,
+    });
+  };
+
+  const handleSubmit = (e) => {
+    // Handle form submission here
+    dispatch({ type: "RESET" });
+  };
   useEffect(() => {
-    /*      fetch("http://localhost:8080/api/clients")
-        .then(res=>res.json())
-        .then(data=>{
-            setClients(data);
-        }) */
+    function getClients() {
+      publicRequest.get("/clients").then((res) => {
+        let data = res.data.map((val) => {
+          return {
+            name: val.name,
+            email: val.email,
+            phone: val.phone,
+            serviceType: val.serviceType,
+          };
+        });
+        setClients(data);
+      });
+    }
+    getClients();
   }, []);
 
   return (
@@ -33,6 +78,7 @@ const Clients = () => {
                 <label
                   htmlFor="my-modal"
                   className="btn btn-sm btn-circle absolute right-2 top-5"
+                  onClick={handleSubmit}
                 >
                   ✕
                 </label>
@@ -41,6 +87,9 @@ const Clients = () => {
                     <span className="label-text">Name</span>
                   </label>
                   <input
+                    onChange={handleChange}
+                    name="name"
+                    value={formState.name}
                     type="text"
                     placeholder="Name"
                     required
@@ -50,6 +99,9 @@ const Clients = () => {
                     <span className="label-text">Email</span>
                   </label>
                   <input
+                    onChange={handleChange}
+                    name="email"
+                    value={formState.email}
                     type="email"
                     placeholder="Email"
                     required
@@ -59,6 +111,9 @@ const Clients = () => {
                     <span className="label-text">Phone</span>
                   </label>
                   <input
+                    onChange={handleChange}
+                    name="phone"
+                    value={formState.phone}
                     type="tel"
                     placeholder="Phone"
                     maxLength={10}
@@ -69,17 +124,11 @@ const Clients = () => {
                     <span className="label-text">Service Type</span>
                   </label>
                   <input
+                    onChange={handleChange}
+                    name="serviceType"
+                    value={formState.serviceType}
                     type="text"
                     placeholder="Service Type"
-                    required
-                    className="input  input-bordered w-full max-w-xs"
-                  />
-                  <label className="label">
-                    <span className="label-text">Service Start</span>
-                  </label>
-                  <input
-                    type="date"
-                    placeholder="Service Start"
                     required
                     className="input  input-bordered w-full max-w-xs"
                   />
@@ -87,6 +136,9 @@ const Clients = () => {
                     <span className="label-text">Address</span>
                   </label>
                   <input
+                    onChange={handleChange}
+                    name="address"
+                    value={formState.address}
                     type="text"
                     placeholder="Address"
                     required
@@ -95,7 +147,11 @@ const Clients = () => {
                 </form>
 
                 <div className="modal-action">
-                  <label htmlFor="my-modal" className="btn">
+                  <label
+                    htmlFor="my-modal"
+                    className="btn"
+                    onClick={handleSubmit}
+                  >
                     Submit
                   </label>
                 </div>
@@ -103,10 +159,7 @@ const Clients = () => {
             </div>
           </>
         ) : null}
-        <Table
-          heads={["Name", "Service Status", "Service Started"]}
-          rows={clients}
-        />
+        <Table heads={heads} rows={clients} />
       </div>
     </div>
   );

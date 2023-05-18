@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { persistor } from "../redux/store";
 const Navbar = () => {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const logout = () => {
+    persistor.purge();
+    navigate("/login");
+  };
   return (
     <div className="navbar bg-base-100 sticky top-0">
       <div className="flex-1">
@@ -24,7 +28,7 @@ const Navbar = () => {
             </li>
           ) : null}
           <li>
-            <button>Logout</button>
+            <button onClick={logout}>Logout</button>
           </li>
         </ul>
       </div>

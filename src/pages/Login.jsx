@@ -8,7 +8,6 @@ const Login = () => {
   const dispatch = useDispatch();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -16,8 +15,8 @@ const Login = () => {
       alert("All fields are required");
     }
     let response = await login(dispatch, {
-      username: userRef.current.value,
-      password: passRef.current.value,
+      email: email,
+      password: password,
     });
     if (response.status === 200) {
       if (response.data === "Wrong Password") {
@@ -51,7 +50,7 @@ const Login = () => {
               <input
                 type="text"
                 placeholder="email"
-                onClick={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 className="input input-bordered"
               />
             </div>
@@ -62,7 +61,7 @@ const Login = () => {
               <input
                 type="text"
                 placeholder="password"
-                onClick={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 className="input input-bordered"
               />
               <label className="label">

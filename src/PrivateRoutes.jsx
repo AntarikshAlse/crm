@@ -4,8 +4,7 @@ import Navbar from "./components/Navbar";
 import { useSelector } from "react-redux";
 const PrivateRoutes = () => {
   const { currentUser } = useSelector((state) => state.user);
-  const admin = currentUser?.isAdmin;
-  return admin ? (
+  return currentUser ? (
     <>
       <Navbar />
       <div className="container mx-6">
