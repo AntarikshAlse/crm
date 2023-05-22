@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 import { useSelector } from "react-redux";
+import { publicRequest } from "../requestMethods";
 import Table from "../components/Table";
 const Tickets = () => {
   const { currentUser } = useSelector((state) => state.user);
@@ -7,30 +8,78 @@ const Tickets = () => {
     {
       subject: "Ticket 1",
       status: "Ticket 1 description",
-      last_updated: "2021-01-01T00:00",
+      issueDate: "2021-01-01T00:00",
     },
     {
       subject: "Ticket 2",
       status: "Ticket 2 description",
-      last_updated: "2021-01-01T00:00",
+      issueDate: "2021-01-01T00:00",
     },
     {
       subject: "Ticket 3",
       status: "Ticket 3 description",
-      last_updated: "2021-01-01T00:00",
+      issueDate: "2021-01-01T00:00",
     },
     {
       subject: "Ticket 4",
       status: "Ticket 4 description",
-      last_updated: "2021-01-01T00:00",
+      issueDate: "2021-01-01T00:00",
     },
   ]);
+  const initialState = {
+    subject: "",
+    status: "Operator Pending",
+    issueDate: new Date(),
+  };
+  function reducer(state, action) {
+    switch (action.type) {
+      case "CHANGE":
+        return {
+          ...state,
+          [action.field]: action.value,
+        };
+      case "RESET":
+        return initialState;
+      default:
+        throw new Error();
+    }
+  }
+  const [formState, dispatch] = useReducer(reducer, initialState);
+  const handleChange = (e) => {
+    dispatch({
+      type: "CHANGE",
+      field: e.target.name,
+      value: e.target.value,
+    });
+  };
+  function getTickets() {
+    publicRequest.get("/tickets").then((res) => {
+      let data = res.data.map((val) => {
+        return {
+          subject: val.subject,
+          status: val.status,
+          issueDate: new Date(val.issueDate).toLocaleDateString(),
+        };
+      });
+      setTickets(data);
+    });
+  }
+  const handleSubmit = async (e) => {
+    // Handle form submission here
+    try {
+      let response = await publicRequest.post("/tickets", formState);
+      if (!response.error || response.status === 201) {
+        getTickets();
+      }
+    } catch (error) {
+      alert(error.message);
+      console.log(error.message);
+    }
+
+    dispatch({ type: "RESET" });
+  };
   useEffect(() => {
-    /*      fetch("http://localhost:8080/api/tickets")
-        .then(res=>res.json())
-        .then(data=>{
-            setTickets(data);
-        }) */
+    getTickets();
   }, []);
   return (
     <>
@@ -58,6 +107,9 @@ const Tickets = () => {
                       <span className="label-text">Subject</span>
                     </label>
                     <textarea
+                      value={formState.subject}
+                      name="subject"
+                      onChange={handleChange}
                       className="textarea textarea-bordered"
                       placeholder="Subject"
                     ></textarea>
@@ -65,6 +117,9 @@ const Tickets = () => {
                       <span className="label-text">Issue Date</span>
                     </label>
                     <input
+                      onChange={handleChange}
+                      value={formState.issueDate}
+                      name="issueDate"
                       type="date"
                       placeholder="Issue Date"
                       required
@@ -73,16 +128,23 @@ const Tickets = () => {
                     <label className="label">
                       <span className="label-text">Status</span>
                     </label>
-                    <input
-                      type="text"
-                      placeholder="Status"
-                      required
-                      className="input my-2 input-bordered w-full max-w-xs"
-                    />
+                    <select
+                      name="status"
+                      onChange={handleChange}
+                      value={formState.status}
+                      className="select select-bordered w-full max-w-xs"
+                    >
+                      <option value="Operator Pending">Operator Pending</option>
+                      <option value="Client Pending">Client Pending</option>
+                    </select>
                   </form>
 
                   <div className="modal-action">
-                    <label htmlFor="my-modal" className="btn">
+                    <label
+                      htmlFor="my-modal"
+                      className="btn"
+                      onClick={handleSubmit}
+                    >
                       Submit
                     </label>
                   </div>
@@ -90,7 +152,7 @@ const Tickets = () => {
               </div>
             </>
           ) : null}
-          <Table heads={["Subject", "Status", "Last Updated"]} rows={tickets} />
+          <Table heads={["Subject", "Status", "Issue Date"]} rows={tickets} />
         </div>
       </div>
     </>

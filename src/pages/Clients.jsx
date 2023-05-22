@@ -39,25 +39,34 @@ const Clients = () => {
       value: e.target.value,
     });
   };
-
-  const handleSubmit = (e) => {
+  function getClients() {
+    publicRequest.get("/clients").then((res) => {
+      let data = res.data.map((val) => {
+        return {
+          name: val.name,
+          email: val.email,
+          phone: val.phone,
+          serviceType: val.serviceType,
+        };
+      });
+      setClients(data);
+    });
+  }
+  const handleSubmit = async (e) => {
     // Handle form submission here
+    try {
+      let response = await publicRequest.post("/clients", formState);
+      if (!response.error || response.status === 201) {
+        getClients();
+      }
+    } catch (error) {
+      alert(error.message);
+      console.log(error);
+    }
+
     dispatch({ type: "RESET" });
   };
   useEffect(() => {
-    function getClients() {
-      publicRequest.get("/clients").then((res) => {
-        let data = res.data.map((val) => {
-          return {
-            name: val.name,
-            email: val.email,
-            phone: val.phone,
-            serviceType: val.serviceType,
-          };
-        });
-        setClients(data);
-      });
-    }
     getClients();
   }, []);
 
